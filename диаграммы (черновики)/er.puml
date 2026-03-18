@@ -1,0 +1,62 @@
+@startuml er_diagram
+skinparam linetype ortho
+skinparam entity {
+  BackgroundColor #EEF5FF
+  BorderColor #3A7BD5
+}
+
+entity "User\n(Пользователь)" as User {
+  * id : UUID <<PK>>
+  --
+  email : VARCHAR(255) <<UNIQUE>>
+  password_hash : TEXT
+  full_name : VARCHAR(255)
+  phone : VARCHAR(30)
+  tg_link : VARCHAR(255)
+  vk_link : VARCHAR(255)
+  role : ENUM(user, admin)
+  created_at : TIMESTAMP
+}
+
+entity "Listing\n(Объявление)" as Listing {
+  * id : UUID <<PK>>
+  --
+  source_id : UUID <<FK>>
+  original_text : TEXT
+  photo_url : TEXT
+  brand : VARCHAR(100)
+  model : VARCHAR(255)
+  category : VARCHAR(100)
+  size : VARCHAR(50)
+  color : VARCHAR(100)
+  price : NUMERIC(12,2)
+  city : VARCHAR(100)
+  condition : VARCHAR(50)
+  post_url : TEXT
+  posted_at : TIMESTAMP
+  is_hidden : BOOLEAN
+  created_at : TIMESTAMP
+}
+
+entity "Source\n(Источник)" as Source {
+  * id : UUID <<PK>>
+  --
+  platform : ENUM(telegram, vk)
+  external_id : VARCHAR(255)
+  title : VARCHAR(255)
+  is_active : BOOLEAN
+  added_at : TIMESTAMP
+}
+
+entity "Favorite\n(Избранное)" as Favorite {
+  * id : UUID <<PK>>
+  --
+  user_id : UUID <<FK>>
+  listing_id : UUID <<FK>>
+  saved_at : TIMESTAMP
+}
+
+User ||--o{ Favorite : "сохраняет"
+Listing ||--o{ Favorite : "входит в"
+Source ||--o{ Listing : "содержит"
+@enduml

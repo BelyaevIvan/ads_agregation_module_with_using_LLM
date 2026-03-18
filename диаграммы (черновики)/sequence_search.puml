@@ -1,0 +1,43 @@
+@startuml seq_search
+skinparam sequenceArrowThickness 1.5
+skinparam participant {
+  BackgroundColor #F5FFF5
+  BorderColor #2E8B57
+}
+
+actor "Пользователь" as User
+participant "React SPA" as SPA
+participant "FastAPI\n(REST API)" as API
+participant "SearchService" as Search
+participant "PostgreSQL" as DB
+
+User -> SPA : вводит запрос и нажимает «Найти»
+activate SPA
+
+SPA -> API : GET /listings?q=nike&brand=Nike&size=42&city=Москва
+activate API
+
+API -> Search : search(query, filters)
+activate Search
+
+Search -> DB : SELECT ... WHERE tsv @@ query\nAND brand = ? AND size = ? AND city = ?
+activate DB
+DB --> Search : List[Listing]
+deactivate DB
+
+Search --> API : SearchResult {items, total}
+deactivate Search
+
+API --> SPA : 200 OK {items: [...], total: N}
+deactivate API
+
+SPA --> User : отображает карточки объявлений
+deactivate SPA
+
+opt пользователь аутентифицирован
+  User -> SPA : нажимает «В избранное»
+  SPA -> API : POST /favorites/{listing_id}
+  API --> SPA : 201 Created
+  SPA --> User : иконка избранного активна
+end
+@enduml

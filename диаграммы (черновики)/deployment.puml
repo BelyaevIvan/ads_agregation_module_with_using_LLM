@@ -1,0 +1,61 @@
+@startuml deployment
+skinparam node {
+  BackgroundColor #FFF8E1
+  BorderColor #F57F17
+}
+skinparam component {
+  BackgroundColor #E8F5E9
+  BorderColor #2E7D32
+}
+skinparam database {
+  BackgroundColor #E3F2FD
+  BorderColor #1565C0
+}
+skinparam cloud {
+  BackgroundColor #FCE4EC
+  BorderColor #880E4F
+}
+
+node "Сервер приложения\n(Docker Host)" as AppServer {
+
+  node "Docker: frontend" as FE {
+    component "React SPA\n(Nginx)" as ReactApp
+  }
+
+  node "Docker: backend" as BE {
+    component "FastAPI\n(REST API)" as FastAPI
+    component "Monitor Worker\n(asyncio)" as Worker
+  }
+
+  node "Docker: postgres" as PG {
+    database "PostgreSQL\n(объявления, пользователи)" as Postgres
+  }
+
+  node "Docker: minio" as Minio {
+    database "MinIO\n(фотографии товаров)" as MinioStorage
+  }
+
+  node "Docker: redis" as RedisNode {
+    database "Redis\n(сессии / кеш)" as Redis
+  }
+}
+
+cloud "Внешние сервисы" {
+  component "Telegram Bot API\n/ MTProto" as TG
+  component "VK API" as VK
+  component "LLM API\n(OpenAI / YandexGPT)" as LLM
+}
+
+actor "Пользователь\n(браузер)" as User
+
+User --> ReactApp : HTTPS
+ReactApp --> FastAPI : REST API (HTTP)
+FastAPI --> Postgres : SQL
+FastAPI --> MinioStorage : S3 API
+FastAPI --> Redis : кеш / сессии
+Worker --> TG : long polling / webhook
+Worker --> VK : polling
+Worker --> LLM : HTTP (prompt → JSON)
+Worker --> Postgres : INSERT
+Worker --> MinioStorage : upload photo
+@enduml

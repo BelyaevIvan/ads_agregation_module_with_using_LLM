@@ -1,0 +1,138 @@
+@startuml classes
+skinparam class {
+  BackgroundColor #F5FFF5
+  BorderColor #2E8B57
+  ArrowColor #2E8B57
+}
+
+' === DOMAIN MODELS ===
+class User {
+  - id: UUID
+  - email: str
+  - passwordHash: str
+  - fullName: str
+  - phone: str
+  - tgLink: str
+  - vkLink: str
+  - role: UserRole
+  - createdAt: datetime
+  + isAdmin(): bool
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+class Listing {
+  - id: UUID
+  - sourceId: UUID
+  - originalText: str
+  - photoUrl: str
+  - brand: str
+  - model: str
+  - category: str
+  - size: str
+  - color: str
+  - price: Decimal
+  - city: str
+  - condition: str
+  - postUrl: str
+  - postedAt: datetime
+  - isHidden: bool
+  + toDict(): dict
+}
+
+class Source {
+  - id: UUID
+  - platform: Platform
+  - externalId: str
+  - title: str
+  - isActive: bool
+  + activate(): void
+  + deactivate(): void
+}
+
+enum Platform {
+  TELEGRAM
+  VK
+}
+
+class Favorite {
+  - id: UUID
+  - userId: UUID
+  - listingId: UUID
+  - savedAt: datetime
+}
+
+' === REPOSITORIES ===
+class ListingRepository {
+  + findById(id: UUID): Listing
+  + search(query: str, filters: SearchFilters): List[Listing]
+  + save(listing: Listing): Listing
+  + hide(id: UUID): void
+  + restore(id: UUID): void
+}
+
+class UserRepository {
+  + findById(id: UUID): User
+  + findByEmail(email: str): User
+  + save(user: User): User
+  + update(user: User): User
+}
+
+class FavoriteRepository {
+  + findByUser(userId: UUID): List[Listing]
+  + add(userId: UUID, listingId: UUID): Favorite
+  + remove(userId: UUID, listingId: UUID): void
+}
+
+' === SERVICES ===
+class MonitorService {
+  - tgClient: TelegramClient
+  - vkClient: VKClient
+  - parserService: LLMParserService
+  + startMonitoring(): void
+  + stopMonitoring(): void
+  - onNewMessage(msg: RawMessage): void
+}
+
+class LLMParserService {
+  - llmClient: LLMClient
+  - storageService: StorageService
+  - listingRepo: ListingRepository
+  + parse(rawMessage: RawMessage): Listing
+  - buildPrompt(text: str): str
+  - extractAttributes(response: str): dict
+}
+
+class StorageService {
+  - minioClient: MinioClient
+  + uploadPhoto(url: str): str
+}
+
+class SearchService {
+  - listingRepo: ListingRepository
+  + search(query: str, filters: SearchFilters): SearchResult
+}
+
+class AuthService {
+  - userRepo: UserRepository
+  + register(email: str, password: str): User
+  + login(email: str, password: str): str
+  + validateToken(token: str): User
+}
+
+' === RELATIONS ===
+User "1" --> "0..*" Favorite
+Listing "1" --> "0..*" Favorite
+Source "1" --> "0..*" Listing
+User --> UserRole
+Source --> Platform
+
+MonitorService --> LLMParserService
+LLMParserService --> StorageService
+LLMParserService --> ListingRepository
+SearchService --> ListingRepository
+AuthService --> UserRepository
+@enduml

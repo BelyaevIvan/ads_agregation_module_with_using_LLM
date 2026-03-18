@@ -1,0 +1,43 @@
+@startuml seq_parsing
+skinparam sequenceArrowThickness 1.5
+skinparam participant {
+  BackgroundColor #EEF5FF
+  BorderColor #3A7BD5
+}
+
+participant "Telegram API\n/ VK API" as Ext
+participant "MonitorWorker" as Worker
+participant "LLMParserService" as Parser
+participant "LLM API" as LLM
+participant "StorageService\n(MinIO)" as Storage
+participant "ListingRepository\n(PostgreSQL)" as DB
+
+Ext -> Worker : новое сообщение (текст + фото)
+activate Worker
+
+Worker -> Parser : parse(rawMessage)
+activate Parser
+
+Parser -> LLM : POST /chat/completions\n(prompt с текстом объявления)
+activate LLM
+LLM --> Parser : JSON {brand, model, size,\n color, price, city, condition}
+deactivate LLM
+
+alt фото присутствует
+  Parser -> Storage : uploadPhoto(photo_url)
+  activate Storage
+  Storage --> Parser : internal_photo_url
+  deactivate Storage
+end
+
+Parser -> DB : save(listing)
+activate DB
+DB --> Parser : listing (с id)
+deactivate DB
+
+Parser --> Worker : listing
+deactivate Parser
+
+Worker --> Ext : (подтверждение обработки)
+deactivate Worker
+@enduml

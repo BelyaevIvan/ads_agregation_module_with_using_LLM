@@ -1,0 +1,63 @@
+@startuml datalogical
+skinparam linetype ortho
+skinparam class {
+  BackgroundColor #FFFBE6
+  BorderColor #D4A017
+  ArrowColor #D4A017
+}
+
+class "users" {
+  + id : UUID <<PK>>
+  --
+  email : VARCHAR(255) NOT NULL UNIQUE
+  password_hash : TEXT NOT NULL
+  full_name : VARCHAR(255)
+  phone : VARCHAR(30)
+  tg_link : VARCHAR(255)
+  vk_link : VARCHAR(255)
+  role : VARCHAR(10) DEFAULT 'user'
+  created_at : TIMESTAMPTZ DEFAULT NOW()
+}
+
+class "sources" {
+  + id : UUID <<PK>>
+  --
+  platform : VARCHAR(10) NOT NULL
+  external_id : VARCHAR(255) NOT NULL
+  title : VARCHAR(255)
+  is_active : BOOLEAN DEFAULT TRUE
+  added_at : TIMESTAMPTZ DEFAULT NOW()
+}
+
+class "listings" {
+  + id : UUID <<PK>>
+  --
+  source_id : UUID <<FK>>
+  original_text : TEXT
+  photo_url : TEXT
+  brand : VARCHAR(100)
+  model : VARCHAR(255)
+  category : VARCHAR(100)
+  size : VARCHAR(50)
+  color : VARCHAR(100)
+  price : NUMERIC(12,2)
+  city : VARCHAR(100)
+  condition : VARCHAR(50)
+  post_url : TEXT NOT NULL
+  posted_at : TIMESTAMPTZ
+  is_hidden : BOOLEAN DEFAULT FALSE
+  created_at : TIMESTAMPTZ DEFAULT NOW()
+}
+
+class "favorites" {
+  + id : UUID <<PK>>
+  --
+  user_id : UUID <<FK>> NOT NULL
+  listing_id : UUID <<FK>> NOT NULL
+  saved_at : TIMESTAMPTZ DEFAULT NOW()
+}
+
+sources "1" --> "0..*" listings : source_id
+users "1" --> "0..*" favorites : user_id
+listings "1" --> "0..*" favorites : listing_id
+@enduml

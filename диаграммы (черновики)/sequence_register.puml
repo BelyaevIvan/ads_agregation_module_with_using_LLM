@@ -1,0 +1,40 @@
+@startuml seq_auth
+skinparam sequenceArrowThickness 1.5
+
+actor "Пользователь" as User
+participant "React SPA" as SPA
+participant "FastAPI\n(REST API)" as API
+participant "AuthService" as Auth
+participant "PostgreSQL" as DB
+participant "Redis" as Cache
+
+== Регистрация ==
+User -> SPA : заполняет форму регистрации
+SPA -> API : POST /auth/register\n{email, password}
+activate API
+API -> Auth : register(email, password)
+activate Auth
+Auth -> DB : INSERT INTO users
+DB --> Auth : user
+Auth --> API : user
+deactivate Auth
+API --> SPA : 201 Created {user_id}
+deactivate API
+SPA --> User : перенаправление на страницу входа
+
+== Аутентификация ==
+User -> SPA : вводит email и пароль
+SPA -> API : POST /auth/login\n{email, password}
+activate API
+API -> Auth : login(email, password)
+activate Auth
+Auth -> DB : SELECT * FROM users WHERE email = ?
+DB --> Auth : user
+Auth -> Auth : проверка password_hash
+Auth -> Cache : SET session:{token} = user_id (TTL)
+Auth --> API : JWT token
+deactivate Auth
+API --> SPA : 200 OK {access_token}
+deactivate API
+SPA --> User : сохраняет токен, открывает ЛК
+@enduml

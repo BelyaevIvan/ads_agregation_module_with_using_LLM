@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BrandHunt — Прототип</title>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;700;900&family=Onest:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --c-bg: #0D0F14;
+    --c-surface: #16191F;
+    --c-surface2: #1E2229;
+    --c-border: rgba(255,255,255,0.07);
+    --c-text: #F0F2F7;
+    --c-muted: #7B8494;
+    --c-accent: #6C63FF;
+    --c-accent2: #FF6B6B;
+    --c-grad: linear-gradient(135deg, #6C63FF 0%, #FF6B6B 100%);
+    --c-grad2: linear-gradient(135deg, #1E2229 0%, #16191F 100%);
+    --c-green: #2ECC71;
+    --radius: 16px;
+    --radius-sm: 10px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; font-family: 'Onest', sans-serif; background: var(--c-bg); color: var(--c-text); }
+
+  /* NAV */
+  .app-nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    background: rgba(13,15,20,0.85); backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--c-border);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 40px; height: 64px;
+  }
+  .logo {
+    font-family: 'Unbounded', sans-serif; font-size: 18px; font-weight: 900;
+    background: var(--c-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    cursor: pointer; letter-spacing: -0.5px;
+  }
+  .nav-links { display: flex; gap: 8px; align-items: center; }
+  .nav-btn {
+    padding: 8px 20px; border-radius: 50px; font-size: 14px; font-family: 'Onest', sans-serif;
+    font-weight: 500; cursor: pointer; border: none; transition: all 0.2s;
+  }
+  .nav-btn.ghost { background: transparent; color: var(--c-muted); border: 1px solid var(--c-border); }
+  .nav-btn.ghost:hover { color: var(--c-text); border-color: rgba(255,255,255,0.2); }
+  .nav-btn.primary { background: var(--c-grad); color: #fff; }
+  .nav-btn.primary:hover { opacity: 0.9; transform: translateY(-1px); }
+
+  /* SCREEN SWITCHER */
+  .screen-nav {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); z-index: 200;
+    background: rgba(22,25,31,0.95); backdrop-filter: blur(20px);
+    border: 1px solid var(--c-border); border-radius: 50px;
+    display: flex; gap: 4px; padding: 6px;
+  }
+  .sn-btn {
+    padding: 8px 16px; border-radius: 50px; font-size: 12px; font-family: 'Onest', sans-serif;
+    font-weight: 500; cursor: pointer; border: none; background: transparent;
+    color: var(--c-muted); transition: all 0.2s; white-space: nowrap;
+  }
+  .sn-btn.active { background: var(--c-grad); color: #fff; }
+  .sn-btn:not(.active):hover { color: var(--c-text); }
+
+  /* SCREENS */
+  .screen { display: none; min-height: 100vh; padding-top: 64px; animation: fadeIn 0.3s ease; }
+  .screen.active { display: block; }
+  @keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+
+  /* ===== SCREEN 1: HOME ===== */
+  .hero {
+    min-height: calc(100vh - 64px);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 60px 40px 120px; position: relative; overflow: hidden;
+  }
+  .hero-glow {
+    position: absolute; width: 600px; height: 600px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(108,99,255,0.15) 0%, transparent 70%);
+    top: 50%; left: 50%; transform: translate(-50%,-60%); pointer-events: none;
+  }
+  .hero-glow2 {
+    position: absolute; width: 400px; height: 400px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(255,107,107,0.1) 0%, transparent 70%);
+    bottom: 20%; right: 15%; pointer-events: none;
+  }
+  .hero-badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: rgba(108,99,255,0.12); border: 1px solid rgba(108,99,255,0.3);
+    border-radius: 50px; padding: 6px 16px; margin-bottom: 32px;
+    font-size: 13px; color: #A89CFF;
+  }
+  .hero-badge span { width: 6px; height: 6px; border-radius: 50%; background: #6C63FF; display: inline-block; animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+  .hero-title {
+    font-family: 'Unbounded', sans-serif; font-size: clamp(36px,6vw,72px); font-weight: 900;
+    text-align: center; line-height: 1.1; letter-spacing: -2px; margin-bottom: 20px;
+  }
+  .hero-title .grad { background: var(--c-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .hero-sub { font-size: 18px; color: var(--c-muted); text-align: center; max-width: 520px; line-height: 1.6; margin-bottom: 48px; }
+  .search-wrap {
+    width: 100%; max-width: 640px; position: relative;
+    background: var(--c-surface2); border: 1px solid var(--c-border);
+    border-radius: 60px; display: flex; align-items: center;
+    padding: 6px 6px 6px 24px; transition: border-color 0.2s;
+  }
+  .search-wrap:focus-within { border-color: rgba(108,99,255,0.6); box-shadow: 0 0 0 4px rgba(108,99,255,0.1); }
+  .search-wrap input {
+    flex: 1; background: transparent; border: none; outline: none;
+    font-size: 16px; font-family: 'Onest', sans-serif; color: var(--c-text);
+    padding: 10px 0;
+  }
+  .search-wrap input::placeholder { color: var(--c-muted); }
+  .search-btn {
+    background: var(--c-grad); border: none; border-radius: 50px; padding: 12px 28px;
+    color: #fff; font-size: 15px; font-weight: 600; font-family: 'Onest', sans-serif;
+    cursor: pointer; transition: all 0.2s; white-space: nowrap;
+  }
+  .search-btn:hover { opacity: 0.9; transform: scale(1.02); }
+  .hero-tags { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin-top: 28px; }
+  .tag {
+    background: var(--c-surface2); border: 1px solid var(--c-border);
+    border-radius: 50px; padding: 6px 16px; font-size: 13px; color: var(--c-muted);
+    cursor: pointer; transition: all 0.2s;
+  }
+  .tag:hover { border-color: rgba(108,99,255,0.4); color: var(--c-text); }
+  .hero-stats { display: flex; gap: 48px; margin-top: 64px; }
+  .stat-item { text-align: center; }
+  .stat-num { font-family: 'Unbounded', sans-serif; font-size: 28px; font-weight: 700; background: var(--c-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .stat-label { font-size: 13px; color: var(--c-muted); margin-top: 4px; }
+
+  /* ===== SCREEN 2: SEARCH RESULTS ===== */
+  .results-layout { display: flex; gap: 24px; padding: 32px 40px 120px; max-width: 1280px; margin: 0 auto; }
+  .filters-panel {
+    width: 260px; flex-shrink: 0;
+    background: var(--c-surface); border: 1px solid var(--c-border); border-radius: var(--radius);
+    padding: 24px; height: fit-content; position: sticky; top: 88px;
+  }
+  .filters-title { font-family: 'Unbounded', sans-serif; font-size: 13px; font-weight: 700; color: var(--c-muted); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 24px; }
+  .filter-group { margin-bottom: 24px; }
+  .filter-label { font-size: 13px; font-weight: 600; color: var(--c-text); margin-bottom: 12px; }
+  .filter-options { display: flex; flex-direction: column; gap: 8px; }
+  .filter-option { display: flex; align-items: center; gap: 10px; cursor: pointer; }
+  .filter-check {
+    width: 18px; height: 18px; border-radius: 5px; border: 1.5px solid var(--c-border);
+    background: var(--c-surface2); transition: all 0.2s; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .filter-check.checked { background: var(--c-accent); border-color: var(--c-accent); }
+  .filter-check.checked::after { content: '✓'; font-size: 11px; color: #fff; }
+  .filter-option-text { font-size: 14px; color: var(--c-muted); }
+  .filter-option:hover .filter-option-text { color: var(--c-text); }
+  .price-inputs { display: flex; gap: 8px; align-items: center; }
+  .price-input {
+    flex: 1; background: var(--c-surface2); border: 1px solid var(--c-border);
+    border-radius: var(--radius-sm); padding: 8px 12px; font-size: 14px;
+    font-family: 'Onest', sans-serif; color: var(--c-text); outline: none;
+  }
+  .price-input:focus { border-color: rgba(108,99,255,0.4); }
+  .price-sep { color: var(--c-muted); font-size: 12px; }
+  .apply-btn {
+    width: 100%; padding: 12px; background: var(--c-grad); border: none;
+    border-radius: var(--radius-sm); color: #fff; font-size: 14px; font-weight: 600;
+    font-family: 'Onest', sans-serif; cursor: pointer; margin-top: 8px;
+    transition: opacity 0.2s;
+  }
+  .apply-btn:hover { opacity: 0.9; }
+
+  .results-main { flex: 1; min-width: 0; }
+  .results-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+  .results-query { font-family: 'Unbounded', sans-serif; font-size: 20px; font-weight: 700; }
+  .results-query span { background: var(--c-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .results-count { font-size: 14px; color: var(--c-muted); }
+  .sort-select {
+    background: var(--c-surface2); border: 1px solid var(--c-border); border-radius: var(--radius-sm);
+    padding: 8px 32px 8px 12px; font-size: 14px; font-family: 'Onest', sans-serif;
+    color: var(--c-text); outline: none; cursor: pointer; appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%237B8494' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 10px center;
+  }
+  .cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; }
+  .card {
+    background: var(--c-surface); border: 1px solid var(--c-border); border-radius: var(--radius);
+    overflow: hidden; cursor: pointer; transition: all 0.25s; position: relative;
+  }
+  .card:hover { border-color: rgba(108,99,255,0.3); transform: translateY(-4px); box-shadow: 0 16px 40px rgba(0,0,0,0.4); }
+  .card-img {
+    width: 100%; aspect-ratio: 1; object-fit: cover;
+    background: var(--c-surface2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 40px; color: var(--c-border);
+  }
+  .card-img-placeholder { width: 100%; aspect-ratio: 1; background: var(--c-surface2); display: flex; align-items: center; justify-content: center; font-size: 48px; }
+  .card-body { padding: 14px; }
+  .card-brand { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #A89CFF; margin-bottom: 4px; }
+  .card-name { font-size: 14px; font-weight: 600; color: var(--c-text); margin-bottom: 8px; line-height: 1.4; }
+  .card-meta { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+  .card-tag-sm {
+    background: var(--c-surface2); border-radius: 6px; padding: 3px 8px;
+    font-size: 11px; color: var(--c-muted);
+  }
+  .card-footer { display: flex; align-items: center; justify-content: space-between; }
+  .card-price { font-family: 'Unbounded', sans-serif; font-size: 15px; font-weight: 700; color: var(--c-text); }
+  .card-fav {
+    width: 32px; height: 32px; border-radius: 50%; background: var(--c-surface2);
+    border: 1px solid var(--c-border); display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: all 0.2s; font-size: 14px;
+  }
+  .card-fav:hover { border-color: var(--c-accent2); background: rgba(255,107,107,0.1); }
+  .card-fav.active { background: rgba(255,107,107,0.2); border-color: var(--c-accent2); }
+  .card-source-badge {
+    position: absolute; top: 10px; left: 10px;
+    background: rgba(13,15,20,0.8); backdrop-filter: blur(8px);
+    border-radius: 50px; padding: 3px 10px; font-size: 11px; font-weight: 600; color: var(--c-muted);
+    border: 1px solid var(--c-border);
+  }
+
+  /* ===== SCREEN 3: PRODUCT CARD ===== */
+  .product-layout { display: flex; gap: 48px; padding: 40px 40px 120px; max-width: 1100px; margin: 0 auto; }
+  .product-gallery { width: 480px; flex-shrink: 0; }
+  .main-photo {
+    width: 100%; aspect-ratio: 1; background: var(--c-surface2);
+    border: 1px solid var(--c-border); border-radius: var(--radius);
+    display: flex; align-items: center; justify-content: center; font-size: 100px;
+    margin-bottom: 12px; overflow: hidden;
+  }
+  .thumb-row { display: flex; gap: 10px; }
+  .thumb {
+    width: 72px; height: 72px; border-radius: var(--radius-sm);
+    background: var(--c-surface2); border: 2px solid transparent;
+    display: flex; align-items: center; justify-content: center; font-size: 28px;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .thumb.active { border-color: var(--c-accent); }
+  .thumb:hover { border-color: rgba(108,99,255,0.4); }
+
+  .product-info { flex: 1; min-width: 0; }
+  .product-source { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+  .source-chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(108,99,255,0.1); border: 1px solid rgba(108,99,255,0.2);
+    border-radius: 50px; padding: 4px 12px; font-size: 12px; color: #A89CFF;
+  }
+  .product-brand { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; color: #A89CFF; margin-bottom: 8px; }
+  .product-title { font-family: 'Unbounded', sans-serif; font-size: 26px; font-weight: 700; line-height: 1.3; margin-bottom: 16px; letter-spacing: -0.5px; }
+  .product-price-row { display: flex; align-items: baseline; gap: 12px; margin-bottom: 28px; }
+  .product-price { font-family: 'Unbounded', sans-serif; font-size: 36px; font-weight: 900; background: var(--c-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .product-condition { background: rgba(46,204,113,0.15); border: 1px solid rgba(46,204,113,0.3); border-radius: 50px; padding: 4px 12px; font-size: 12px; color: var(--c-green); }
+  .attrs-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 28px; }
+  .attr-item { background: var(--c-surface); border: 1px solid var(--c-border); border-radius: var(--radius-sm); padding: 12px 16px; }
+  .attr-key { font-size: 11px; color: var(--c-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+  .attr-val { font-size: 15px; font-weight: 600; color: var(--c-text); }
+  .original-text-block {
+    background: var(--c-surface); border: 1px solid var(--c-border); border-radius: var(--radius);
+    padding: 20px; margin-bottom: 24px;
+  }
+  .ot-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--c-muted); margin-bottom: 12px; }
+  .ot-text { font-size: 14px; line-height: 1.7; color: rgba(240,242,247,0.75); }
+  .product-actions { display: flex; gap: 12px; }
+  .btn-tg {
+    flex: 1; padding: 15px; border-radius: var(--radius-sm);
+    background: var(--c-grad); border: none; color: #fff; font-size: 15px; font-weight: 600;
+    font-family: 'Onest', sans-serif; cursor: pointer; transition: opacity 0.2s; text-align: center;
+  }
+  .btn-tg:hover { opacity: 0.9; }
+  .btn-fav2 {
+    width: 52px; height: 52px; border-radius: var(--radius-sm); border: 1px solid var(--c-border);
+    background: var(--c-surface); cursor: pointer; font-size: 20px; transition: all 0.2s;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .btn-fav2:hover { border-color: var(--c-accent2); background: rgba(255,107,107,0.1); }
+
+  /* ===== SCREEN 4: AUTH ===== */
+  .auth-wrap {
+    min-height: calc(100vh - 64px); display: flex; align-items: center; justify-content: center;
+    padding: 40px 20px 120px; position: relative; overflow: hidden;
+  }
+  .auth-glow {
+    position: absolute; width: 500px; height: 500px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(108,99,255,0.12) 0%, transparent 70%);
+    top: 50%; left: 50%; transform: translate(-50%,-50%); pointer-events: none;
+  }
+  .auth-card {
+    width: 100%; max-width: 420px; background: var(--c-surface);
+    border: 1px solid var(--c-border); border-radius: 24px; padding: 40px;
+    position: relative; z-index: 1;
+  }
+  .auth-tabs { display: flex; background: var(--c-surface2); border-radius: var(--radius-sm); padding: 4px; margin-bottom: 32px; }
+  .auth-tab {
+    flex: 1; padding: 10px; border-radius: 8px; font-size: 14px; font-weight: 600;
+    font-family: 'Onest', sans-serif; cursor: pointer; border: none; background: transparent;
+    color: var(--c-muted); transition: all 0.2s; text-align: center;
+  }
+  .auth-tab.active { background: var(--c-surface); color: var(--c-text); box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
+  .auth-subtitle { font-size: 22px; font-weight: 700; margin-bottom: 6px; font-family: 'Unbounded', sans-serif; letter-spacing: -0.5px; font-size: 20px; }
+  .auth-desc { font-size: 14px; color: var(--c-muted); margin-bottom: 28px; }
+  .form-group { margin-bottom: 16px; }
+  .form-label { font-size: 13px; font-weight: 600; color: var(--c-muted); margin-bottom: 8px; display: block; }
+  .form-input {
+    width: 100%; background: var(--c-surface2); border: 1px solid var(--c-border);
+    border-radius: var(--radius-sm); padding: 13px 16px; font-size: 15px;
+    font-family: 'Onest', sans-serif; color: var(--c-text); outline: none; transition: border-color 0.2s;
+  }
+  .form-input:focus { border-color: rgba(108,99,255,0.5); box-shadow: 0 0 0 3px rgba(108,99,255,0.08); }
+  .form-input::placeholder { color: var(--c-muted); }
+  .submit-btn {
+    width: 100%; padding: 15px; background: var(--c-grad); border: none; border-radius: var(--radius-sm);
+    color: #fff; font-size: 16px; font-weight: 700; font-family: 'Onest', sans-serif;
+    cursor: pointer; margin-top: 8px; transition: opacity 0.2s, transform 0.2s;
+  }
+  .submit-btn:hover { opacity: 0.9; transform: translateY(-1px); }
+  .auth-divider { text-align: center; font-size: 13px; color: var(--c-muted); margin: 20px 0; }
+  .auth-link { color: #A89CFF; cursor: pointer; text-decoration: underline; }
+
+  /* ===== SCREEN 5: PROFILE / FAVORITES ===== */
+  .profile-layout { display: flex; gap: 32px; padding: 40px 40px 120px; max-width: 1100px; margin: 0 auto; }
+  .profile-sidebar { width: 280px; flex-shrink: 0; }
+  .profile-card {
+    background: var(--c-surface); border: 1px solid var(--c-border); border-radius: var(--radius);
+    padding: 28px; text-align: center; margin-bottom: 16px;
+  }
+  .avatar {
+    width: 80px; height: 80px; border-radius: 50%; margin: 0 auto 16px;
+    background: var(--c-grad); display: flex; align-items: center; justify-content: center;
+    font-family: 'Unbounded', sans-serif; font-size: 28px; font-weight: 900; color: #fff;
+  }
+  .profile-name { font-family: 'Unbounded', sans-serif; font-size: 16px; font-weight: 700; margin-bottom: 4px; }
+  .profile-email { font-size: 13px; color: var(--c-muted); margin-bottom: 16px; }
+  .profile-links { display: flex; flex-direction: column; gap: 8px; }
+  .profile-link-item {
+    display: flex; align-items: center; gap: 10px; padding: 10px 14px;
+    background: var(--c-surface2); border-radius: var(--radius-sm); font-size: 13px; color: var(--c-muted);
+  }
+  .profile-link-item span { font-size: 16px; }
+  .sidebar-menu { background: var(--c-surface); border: 1px solid var(--c-border); border-radius: var(--radius); overflow: hidden; }
+  .menu-item {
+    padding: 14px 20px; font-size: 14px; font-weight: 500; cursor: pointer;
+    border-bottom: 1px solid var(--c-border); transition: background 0.15s;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .menu-item:last-child { border-bottom: none; }
+  .menu-item:hover { background: var(--c-surface2); }
+  .menu-item.active { background: rgba(108,99,255,0.1); color: #A89CFF; }
+  .menu-badge {
+    background: var(--c-grad); border-radius: 50px; padding: 2px 9px;
+    font-size: 11px; font-weight: 700; color: #fff;
+  }
+  .menu-item.danger { color: var(--c-accent2); }
+
+  .profile-main { flex: 1; min-width: 0; }
+  .section-heading { font-family: 'Unbounded', sans-serif; font-size: 18px; font-weight: 700; margin-bottom: 24px; }
+  .profile-form { background: var(--c-surface); border: 1px solid var(--c-border); border-radius: var(--radius); padding: 28px; margin-bottom: 32px; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .save-btn {
+    padding: 12px 28px; background: var(--c-grad); border: none; border-radius: var(--radius-sm);
+    color: #fff; font-size: 14px; font-weight: 600; font-family: 'Onest', sans-serif;
+    cursor: pointer; margin-top: 20px; transition: opacity 0.2s;
+  }
+  .save-btn:hover { opacity: 0.9; }
+  .fav-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; }
+  .fav-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+  .fav-count { font-size: 14px; color: var(--c-muted); }
+</style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="app-nav">
+  <div class="logo" onclick="showScreen('home')">BrandHunt</div>
+  <div class="nav-links">
+    <button class="nav-btn ghost" onclick="showScreen('auth')">Войти</button>
+    <button class="nav-btn primary" onclick="showScreen('auth')">Регистрация</button>
+  </div>
+</nav>
+
+<!-- SCREEN NAV -->
+<div class="screen-nav">
+  <button class="sn-btn active" onclick="showScreen('home')">🏠 Главная</button>
+  <button class="sn-btn" onclick="showScreen('results')">🔍 Результаты</button>
+  <button class="sn-btn" onclick="showScreen('product')">👟 Карточка</button>
+  <button class="sn-btn" onclick="showScreen('auth')">🔐 Вход</button>
+  <button class="sn-btn" onclick="showScreen('profile')">👤 Кабинет</button>
+</div>
+
+<!-- ======================== SCREEN 1: HOME ======================== -->
+<div class="screen active" id="screen-home">
+  <div class="hero">
+    <div class="hero-glow"></div>
+    <div class="hero-glow2"></div>
+    <div class="hero-badge"><span></span> 12 847 объявлений уже в базе</div>
+    <h1 class="hero-title">Бренды с рук —<br><span class="grad">в одном месте</span></h1>
+    <p class="hero-sub">Агрегируем объявления из Telegram и ВКонтакте. Nike, Stone Island, Balenciaga — всё найдётся по выгодной цене.</p>
+    <div class="search-wrap">
+      <input type="text" placeholder="Найти: Nike Air Max 90, Stone Island, iPhone 15..." id="search-input" />
+      <button class="search-btn" onclick="showScreen('results')">Найти →</button>
+    </div>
+    <div class="hero-tags">
+      <span class="tag" onclick="showScreen('results')">Nike</span>
+      <span class="tag" onclick="showScreen('results')">Stone Island</span>
+      <span class="tag" onclick="showScreen('results')">New Balance</span>
+      <span class="tag" onclick="showScreen('results')">Balenciaga</span>
+      <span class="tag" onclick="showScreen('results')">iPhone</span>
+      <span class="tag" onclick="showScreen('results')">Jordan</span>
+      <span class="tag" onclick="showScreen('results')">Arc'teryx</span>
+    </div>
+    <div class="hero-stats">
+      <div class="stat-item"><div class="stat-num">12 847</div><div class="stat-label">объявлений</div></div>
+      <div class="stat-item"><div class="stat-num">340+</div><div class="stat-label">источников</div></div>
+      <div class="stat-item"><div class="stat-num">24/7</div><div class="stat-label">мониторинг</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ======================== SCREEN 2: RESULTS ======================== -->
+<div class="screen" id="screen-results">
+  <div class="results-layout">
+    <!-- Фильтры -->
+    <aside class="filters-panel">
+      <div class="filters-title">Фильтры</div>
+
+      <div class="filter-group">
+        <div class="filter-label">Категория</div>
+        <div class="filter-options">
+          <label class="filter-option"><div class="filter-check checked"></div><span class="filter-option-text">Кроссовки</span></label>
+          <label class="filter-option"><div class="filter-check"></div><span class="filter-option-text">Одежда</span></label>
+          <label class="filter-option"><div class="filter-check"></div><span class="filter-option-text">Электроника</span></label>
+          <label class="filter-option"><div class="filter-check"></div><span class="filter-option-text">Аксессуары</span></label>
+        </div>
+      </div>
+
+      <div class="filter-group">
+        <div class="filter-label">Бренд</div>
+        <div class="filter-options">
+          <label class="filter-option"><div class="filter-check checked"></div><span class="filter-option-text">Nike</span></label>
+          <label class="filter-option"><div class="filter-check checked"></div><span class="filter-option-text">New Balance</span></label>
+          <label class="filter-option"><div class="filter-check"></div><span class="filter-option-text">Jordan</span></label>
+          <label class="filter-option"><div class="filter-check"></div><span class="filter-option-text">Adidas</span></label>
+        </div>
+      </div>
+
+      <div class="filter-group">
+        <div class="filter-label">Размер</div>
+        <div class="filter-options">
+          <label class="filter-option"><div class="filter-check"></div><span class="filter-option-text">40</span></label>
+          <label class="filter-option"><div class="filter-check checked"></div><span class="filter-option-text">41</span></label>
+          <label class="filter-option"><div class="filter-check checked"></div><span class="filter-option-text">42</span></label>
+          <label class="filter-option"><div class="filter-check"></div><span class="filter-option-text">43</span></label>
+        </div>
+      </div>
+
+      <div class="filter-group">
+        <div class="filter-label">Цена, ₽</div>
+        <div class="price-inputs">
+          <input class="price-input" type="text" placeholder="от" value="3 000">
+          <span class="price-sep">—</span>
+          <input class="price-input" type="text" placeholder="до" value="25 000">
+        </div>
+      </div>
+
+      <div class="filter-group">
+        <div class="filter-label">Источник</div>
+        <div class="filter-options">
+          <label class="filter-option"><div class="filter-check checked"></div><span class="filter-option-text">Telegram</span></label>
+          <label class="filter-option"><div class="filter-check checked"></div><span class="filter-option-text">ВКонтакте</span></label>
+        </div>
+      </div>
+
+      <div class="filter-group">
+        <div class="filter-label">Город</div>
+        <div class="filter-options">
+          <label class="filter-option"><div class="filter-check checked"></div><span class="filter-option-text">Москва</span></label>
+          <label class="filter-option"><div class="filter-check"></div><span class="filter-option-text">Санкт-Петербург</span></label>
+          <label class="filter-option"><div class="filter-check"></div><span class="filter-option-text">Другой</span></label>
+        </div>
+      </div>
+
+      <button class="apply-btn">Применить фильтры</button>
+    </aside>
+
+    <!-- Результаты -->
+    <main class="results-main">
+      <div class="results-header">
+        <div>
+          <div class="results-query">Результаты: <span>«Nike»</span></div>
+          <div class="results-count" style="margin-top:4px">Найдено 248 объявлений</div>
+        </div>
+        <select class="sort-select">
+          <option>По дате ↓</option>
+          <option>По цене ↑</option>
+          <option>По цене ↓</option>
+        </select>
+      </div>
+      <div class="cards-grid">
+        <!-- Card 1 -->
+        <div class="card" onclick="showScreen('product')">
+          <div class="card-source-badge">TG</div>
+          <div class="card-img-placeholder">👟</div>
+          <div class="card-body">
+            <div class="card-brand">Nike</div>
+            <div class="card-name">Air Max 90 Essential White</div>
+            <div class="card-meta">
+              <span class="card-tag-sm">Р. 42</span>
+              <span class="card-tag-sm">Новые</span>
+              <span class="card-tag-sm">Москва</span>
+            </div>
+            <div class="card-footer">
+              <div class="card-price">8 500 ₽</div>
+              <div class="card-fav" onclick="event.stopPropagation(); toggleFav(this)">♡</div>
+            </div>
+          </div>
+        </div>
+        <!-- Card 2 -->
+        <div class="card" onclick="showScreen('product')">
+          <div class="card-source-badge">VK</div>
+          <div class="card-img-placeholder">👟</div>
+          <div class="card-body">
+            <div class="card-brand">Nike</div>
+            <div class="card-name">Jordan 1 Retro High OG Chicago</div>
+            <div class="card-meta">
+              <span class="card-tag-sm">Р. 41</span>
+              <span class="card-tag-sm">Б/у</span>
+              <span class="card-tag-sm">СПб</span>
+            </div>
+            <div class="card-footer">
+              <div class="card-price">19 000 ₽</div>
+              <div class="card-fav active" onclick="event.stopPropagation(); toggleFav(this)">♥</div>
+            </div>
+          </div>
+        </div>
+        <!-- Card 3 -->
+        <div class="card" onclick="showScreen('product')">
+          <div class="card-source-badge">TG</div>
+          <div class="card-img-placeholder">👟</div>
+          <div class="card-body">
+            <div class="card-brand">New Balance</div>
+            <div class="card-name">574 Core Grey</div>
+            <div class="card-meta">
+              <span class="card-tag-sm">Р. 43</span>
+              <span class="card-tag-sm">Новые</span>
+              <span class="card-tag-sm">Москва</span>
+            </div>
+            <div class="card-footer">
+              <div class="card-price">6 200 ₽</div>
+              <div class="card-fav" onclick="event.stopPropagation(); toggleFav(this)">♡</div>
+            </div>
+          </div>
+        </div>
+        <!-- Card 4 -->
+        <div class="card" onclick="showScreen('product')">
+          <div class="card-source-badge">TG</div>
+          <div class="card-img-placeholder">👕</div>
+          <div class="card-body">
+            <div class="card-brand">Stone Island</div>
+            <div class="card-name">Patch Badge Hoodie Dust</div>
+            <div class="card-meta">
+              <span class="card-tag-sm">Р. L</span>
+              <span class="card-tag-sm">Новая</span>
+              <span class="card-tag-sm">Москва</span>
+            </div>
+            <div class="card-footer">
+              <div class="card-price">22 000 ₽</div>
+              <div class="card-fav" onclick="event.stopPropagation(); toggleFav(this)">♡</div>
+            </div>
+          </div>
+        </div>
+        <!-- Card 5 -->
+        <div class="card" onclick="showScreen('product')">
+          <div class="card-source-badge">VK</div>
+          <div class="card-img-placeholder">📱</div>
+          <div class="card-body">
+            <div class="card-brand">Apple</div>
+            <div class="card-name">iPhone 15 Pro 256GB Natural Titanium</div>
+            <div class="card-meta">
+              <span class="card-tag-sm">Б/у</span>
+              <span class="card-tag-sm">СПб</span>
+            </div>
+            <div class="card-footer">
+              <div class="card-price">74 000 ₽</div>
+              <div class="card-fav" onclick="event.stopPropagation(); toggleFav(this)">♡</div>
+            </div>
+          </div>
+        </div>
+        <!-- Card 6 -->
+        <div class="card" onclick="showScreen('product')">
+          <div class="card-source-badge">TG</div>
+          <div class="card-img-placeholder">👟</div>
+          <div class="card-body">
+            <div class="card-brand">Adidas</div>
+            <div class="card-name">Yeezy Boost 350 V2 Zebra</div>
+            <div class="card-meta">
+              <span class="card-tag-sm">Р. 42</span>
+              <span class="card-tag-sm">Б/у</span>
+              <span class="card-tag-sm">Казань</span>
+            </div>
+            <div class="card-footer">
+              <div class="card-price">16 500 ₽</div>
+              <div class="card-fav" onclick="event.stopPropagation(); toggleFav(this)">♡</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- ======================== SCREEN 3: PRODUCT ======================== -->
+<div class="screen" id="screen-product">
+  <div class="product-layout">
+    <div class="product-gallery">
+      <div class="main-photo">👟</div>
+      <div class="thumb-row">
+        <div class="thumb active">👟</div>
+        <div class="thumb">📦</div>
+        <div class="thumb">🔍</div>
+      </div>
+    </div>
+    <div class="product-info">
+      <div class="product-source">
+        <div class="source-chip">📱 Telegram · @sneakers_moscow</div>
+        <span style="font-size:12px;color:var(--c-muted)">2 часа назад</span>
+      </div>
+      <div class="product-brand">Nike</div>
+      <div class="product-title">Air Max 90 Essential White/White</div>
+      <div class="product-price-row">
+        <div class="product-price">8 500 ₽</div>
+        <div class="product-condition">Новые</div>
+      </div>
+      <div class="attrs-grid">
+        <div class="attr-item"><div class="attr-key">Размер</div><div class="attr-val">42 EU / 8.5 US</div></div>
+        <div class="attr-item"><div class="attr-key">Цвет</div><div class="attr-val">White / White</div></div>
+        <div class="attr-item"><div class="attr-key">Бренд</div><div class="attr-val">Nike</div></div>
+        <div class="attr-item"><div class="attr-key">Модель</div><div class="attr-val">Air Max 90</div></div>
+        <div class="attr-item"><div class="attr-key">Город</div><div class="attr-val">Москва</div></div>
+        <div class="attr-item"><div class="attr-key">Источник</div><div class="attr-val">Telegram</div></div>
+      </div>
+      <div class="original-text-block">
+        <div class="ot-label">Оригинальный текст объявления</div>
+        <div class="ot-text">Продаю Nike Air Max 90 белые 42 размер. Куплены в Европе, не подошёл размер. Носили буквально 2 раза, состояние идеальное. Коробка в наличии. Цена 8500, торг уместен. Самовывоз м. Таганская или могу встретить у метро. Пишите в лс 🙏</div>
+      </div>
+      <div class="product-actions">
+        <button class="btn-tg">Перейти к посту в Telegram →</button>
+        <button class="btn-fav2">♡</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ======================== SCREEN 4: AUTH ======================== -->
+<div class="screen" id="screen-auth">
+  <div class="auth-wrap">
+    <div class="auth-glow"></div>
+    <div class="auth-card">
+      <div class="auth-tabs">
+        <button class="auth-tab active" id="tab-login" onclick="switchTab('login')">Вход</button>
+        <button class="auth-tab" id="tab-register" onclick="switchTab('register')">Регистрация</button>
+      </div>
+
+      <!-- LOGIN -->
+      <div id="form-login">
+        <div class="auth-subtitle">С возвращением 👋</div>
+        <div class="auth-desc">Войдите, чтобы управлять избранным</div>
+        <div class="form-group">
+          <label class="form-label">Email</label>
+          <input class="form-input" type="email" placeholder="your@email.com">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Пароль</label>
+          <input class="form-input" type="password" placeholder="••••••••">
+        </div>
+        <button class="submit-btn" onclick="showScreen('profile')">Войти</button>
+        <div class="auth-divider">Нет аккаунта? <span class="auth-link" onclick="switchTab('register')">Зарегистрироваться</span></div>
+      </div>
+
+      <!-- REGISTER -->
+      <div id="form-register" style="display:none">
+        <div class="auth-subtitle">Создать аккаунт</div>
+        <div class="auth-desc">Сохраняйте понравившиеся объявления</div>
+        <div class="form-group">
+          <label class="form-label">Email</label>
+          <input class="form-input" type="email" placeholder="your@email.com">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Пароль</label>
+          <input class="form-input" type="password" placeholder="••••••••">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Подтверждение пароля</label>
+          <input class="form-input" type="password" placeholder="••••••••">
+        </div>
+        <button class="submit-btn" onclick="showScreen('profile')">Зарегистрироваться</button>
+        <div class="auth-divider">Уже есть аккаунт? <span class="auth-link" onclick="switchTab('login')">Войти</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ======================== SCREEN 5: PROFILE ======================== -->
+<div class="screen" id="screen-profile">
+  <div class="profile-layout">
+    <!-- Sidebar -->
+    <aside class="profile-sidebar">
+      <div class="profile-card">
+        <div class="avatar">АИ</div>
+        <div class="profile-name">Андрей Иванов</div>
+        <div class="profile-email">andrey@gmail.com</div>
+        <div class="profile-links">
+          <div class="profile-link-item"><span>✈️</span> @andrey_tg</div>
+          <div class="profile-link-item"><span>🌐</span> vk.com/andrey</div>
+          <div class="profile-link-item"><span>📞</span> +7 999 123-45-67</div>
+        </div>
+      </div>
+      <div class="sidebar-menu">
+        <div class="menu-item active" onclick="showTab('tab-data')">👤 Мои данные</div>
+        <div class="menu-item" onclick="showTab('tab-favs')">❤️ Избранное <span class="menu-badge">12</span></div>
+        <div class="menu-item danger" onclick="showScreen('home')">🚪 Выйти</div>
+      </div>
+    </aside>
+
+    <!-- Main -->
+    <main class="profile-main">
+      <!-- Tab: Data -->
+      <div id="tab-data">
+        <div class="section-heading">Личные данные</div>
+        <div class="profile-form">
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Имя</label>
+              <input class="form-input" type="text" value="Андрей">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Фамилия</label>
+              <input class="form-input" type="text" value="Иванов">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Email</label>
+            <input class="form-input" type="email" value="andrey@gmail.com">
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Телефон</label>
+              <input class="form-input" type="text" value="+7 999 123-45-67">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Ссылка Telegram</label>
+              <input class="form-input" type="text" value="@andrey_tg">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Ссылка ВКонтакте</label>
+            <input class="form-input" type="text" value="vk.com/andrey">
+          </div>
+          <button class="save-btn">Сохранить изменения</button>
+        </div>
+      </div>
+
+      <!-- Tab: Favorites -->
+      <div id="tab-favs" style="display:none">
+        <div class="fav-header">
+          <div class="section-heading">Избранное</div>
+          <div class="fav-count">12 объявлений</div>
+        </div>
+        <div class="fav-grid">
+          <div class="card" onclick="showScreen('product')">
+            <div class="card-source-badge">TG</div>
+            <div class="card-img-placeholder">👟</div>
+            <div class="card-body">
+              <div class="card-brand">Nike</div>
+              <div class="card-name">Jordan 1 Retro High Chicago</div>
+              <div class="card-meta"><span class="card-tag-sm">Р. 41</span><span class="card-tag-sm">Б/у</span></div>
+              <div class="card-footer">
+                <div class="card-price">19 000 ₽</div>
+                <div class="card-fav active" onclick="event.stopPropagation()">♥</div>
+              </div>
+            </div>
+          </div>
+          <div class="card" onclick="showScreen('product')">
+            <div class="card-source-badge">VK</div>
+            <div class="card-img-placeholder">👕</div>
+            <div class="card-body">
+              <div class="card-brand">Stone Island</div>
+              <div class="card-name">Patch Badge Hoodie Dust</div>
+              <div class="card-meta"><span class="card-tag-sm">Р. L</span><span class="card-tag-sm">Новая</span></div>
+              <div class="card-footer">
+                <div class="card-price">22 000 ₽</div>
+                <div class="card-fav active" onclick="event.stopPropagation()">♥</div>
+              </div>
+            </div>
+          </div>
+          <div class="card" onclick="showScreen('product')">
+            <div class="card-source-badge">TG</div>
+            <div class="card-img-placeholder">📱</div>
+            <div class="card-body">
+              <div class="card-brand">Apple</div>
+              <div class="card-name">iPhone 15 Pro 256GB Titanium</div>
+              <div class="card-meta"><span class="card-tag-sm">Б/у</span><span class="card-tag-sm">СПб</span></div>
+              <div class="card-footer">
+                <div class="card-price">74 000 ₽</div>
+                <div class="card-fav active" onclick="event.stopPropagation()">♥</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script>
+  function showScreen(name) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.sn-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('screen-' + name).classList.add('active');
+    const map = { home: 0, results: 1, product: 2, auth: 3, profile: 4 };
+    document.querySelectorAll('.sn-btn')[map[name]].classList.add('active');
+    window.scrollTo(0, 0);
+  }
+  function switchTab(tab) {
+    document.getElementById('tab-login').classList.toggle('active', tab === 'login');
+    document.getElementById('tab-register').classList.toggle('active', tab === 'register');
+    document.getElementById('form-login').style.display = tab === 'login' ? 'block' : 'none';
+    document.getElementById('form-register').style.display = tab === 'register' ? 'block' : 'none';
+  }
+  function showTab(tabId) {
+    document.querySelectorAll('.profile-main > div').forEach(d => d.style.display = 'none');
+    document.getElementById(tabId).style.display = 'block';
+    document.querySelectorAll('.menu-item').forEach(m => m.classList.remove('active'));
+    event.target.classList.add('active');
+  }
+  function toggleFav(el) {
+    el.classList.toggle('active');
+    el.textContent = el.classList.contains('active') ? '♥' : '♡';
+  }
+</script>
+</body>
+</html>
