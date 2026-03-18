@@ -1,0 +1,14 @@
+{
+    "response": [
+        {
+            "id": 193532348,
+            "name": "СТОН СИПИ",
+            "screen_name": "stonecp",
+            "is_closed": 0,
+            "type": "page",
+            "photo_50": "https://sun3-22.userapi.com/s/v1/ig2/i8sKJa-zZ1HeIU40DtMIupQojVFY9_bEeMNP62Hr2ImSURN4zcSOYw2mxESsMjUXeB_iLLxjyKobga4sy_PO4arp.jpg?quality=95&crop=274,232,1079,1079&as=32x32,48x48,72x72,108x108,160x160,240x240,360x360,480x480,540x540,640x640,720x720&ava=1&cs=50x50",
+            "photo_100": "https://sun3-22.userapi.com/s/v1/ig2/i8sKJa-zZ1HeIU40DtMIupQojVFY9_bEeMNP62Hr2ImSURN4zcSOYw2mxESsMjUXeB_iLLxjyKobga4sy_PO4arp.jpg?quality=95&crop=274,232,1079,1079&as=32x32,48x48,72x72,108x108,160x160,240x240,360x360,480x480,540x540,640x640,720x720&ava=1&cs=100x100",
+            "photo_200": "https://sun3-22.userapi.com/s/v1/ig2/i8sKJa-zZ1HeIU40DtMIupQojVFY9_bEeMNP62Hr2ImSURN4zcSOYw2mxESsMjUXeB_iLLxjyKobga4sy_PO4arp.jpg?quality=95&crop=274,232,1079,1079&as=32x32,48x48,72x72,108x108,160x160,240x240,360x360,480x480,540x540,640x640,720x720&ava=1&cs=200x200"
+        }
+    ]
+}
